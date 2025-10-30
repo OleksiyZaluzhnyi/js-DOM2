@@ -6,10 +6,10 @@ const clearGalleryBtn = document.getElementById("clearGallery");
 const removeLastBtn = document.getElementById("removeLast");
 const reverseGalleryBtn = document.getElementById("reverseGallery");
 
-let currentPage = 1; // для пагінації API
-let allImages = [];  // масив усіх завантажених зображень
+let currentPage = 1;
+let allImages = [];
 
-// Отримати зображення з API
+
 async function fetchImages(page = 1, limit = 4) {
     try {
         statusText.textContent = "Завантаження...";
@@ -24,7 +24,6 @@ async function fetchImages(page = 1, limit = 4) {
     }
 }
 
-// Відобразити зображення у галереї
 function renderGallery(images) {
     gallery.innerHTML = ""; // очищаємо перед оновленням
     images.forEach(img => {
@@ -36,14 +35,12 @@ function renderGallery(images) {
     });
 }
 
-// Завантажити перші 4 зображення при старті
 window.addEventListener("DOMContentLoaded", async () => {
     const images = await fetchImages(currentPage);
     allImages = images;
     renderGallery(allImages);
 });
 
-// Кнопка "Завантажити ще 4"
 loadMoreBtn.addEventListener("click", async () => {
     currentPage++;
     const newImages = await fetchImages(currentPage);
@@ -51,14 +48,12 @@ loadMoreBtn.addEventListener("click", async () => {
     renderGallery(allImages);
 });
 
-// Кнопка "Очистити галерею"
 clearGalleryBtn.addEventListener("click", () => {
     allImages = [];
     gallery.innerHTML = "";
     statusText.textContent = "Галерею очищено.";
 });
 
-// Кнопка "Видалити останню"
 removeLastBtn.addEventListener("click", () => {
     if (allImages.length === 0) {
         statusText.textContent = "Немає що видаляти!";
@@ -68,7 +63,7 @@ removeLastBtn.addEventListener("click", () => {
     renderGallery(allImages);
 });
 
-// Кнопка "Перевернути галерею"
+
 reverseGalleryBtn.addEventListener("click", () => {
     if (allImages.length === 0) {
         statusText.textContent = "Галерея порожня.";
