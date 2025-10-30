@@ -1,86 +1,79 @@
-const gallery = document.getElementById('gallery');
-let currentPage = 1;
-const imagesPerRow = 4; // Кількість зображень в рядку
-const minGap = 3; // Мінімальний відступ
-const maxGap = 15; // Максимальний відступ
+const gallery = document.getElementById("gallery");
+const statusText = document.getElementById("status");
 
-async function fetchImages(page) {
-    const response = await fetch(`https://picsum.photos/v2/list?page=${page}&limit=${imagesPerRow * 1}`);
-    const images = await response.json();
-    displayImages(images);
+const loadMoreBtn = document.getElementById("loadMore");
+const clearGalleryBtn = document.getElementById("clearGallery");
+const removeLastBtn = document.getElementById("removeLast");
+const reverseGalleryBtn = document.getElementById("reverseGallery");
+
+let currentPage = 1; // для пагінації API
+let allImages = [];  // масив усіх завантажених зображень
+
+// Отримати зображення з API
+async function fetchImages(page = 1, limit = 4) {
+    try {
+        statusText.textContent = "Завантаження...";
+        const response = await fetch(`https://picsum.photos/v2/list?page=${page}&limit=${limit}`);
+        const data = await response.json();
+        statusText.textContent = "";
+        return data;
+    } catch (error) {
+        statusText.textContent = "Помилка завантаження зображень!";
+        console.error(error);
+        return [];
+    }
 }
 
-function displayImages(images) {
-    images.forEach(image => {
-        const imgElement = document.createElement('img');
-        imgElement.src = image.download_url;
-        gallery.appendChild(imgElement);
+// Відобразити зображення у галереї
+function renderGallery(images) {
+    gallery.innerHTML = ""; // очищаємо перед оновленням
+    images.forEach(img => {
+        const image = document.createElement("img");
+        image.src = img.download_url;
+        image.alt = img.author;
+        image.title = `Автор: ${img.author}`;
+        gallery.appendChild(image);
     });
-    
-    updateImageSizes(); // Оновлюємо розміри зображень після їх додавання
 }
 
-function updateImageSizes() {
-    const containerWidth = gallery.clientWidth; // Ширина контейнера
-    const gap = Math.min(Math.max(containerWidth * 0.03, minGap), maxGap); // Обчислюємо відступ
-    const totalGapWidth = gap * (imagesPerRow - 1); // Загальна ширина відступів
-    const imageWidth = (containerWidth - totalGapWidth) / imagesPerRow; // Ширина кожного зображення
+// Завантажити перші 4 зображення при старті
+window.addEventListener("DOMContentLoaded", async () => {
+    const images = await fetchImages(currentPage);
+    allImages = images;
+    renderGallery(allImages);
+});
 
-    const imgElements = gallery.getElementsByTagName('img');
-    for (let img of imgElements) {
-        img.style.width = `${imageWidth}px`; // Встановлюємо ширину
-        img.style.height = 'auto'; // Автоматична висота
-    }
-    
-    // Додати gap до стилю галереї
-    gallery.style.gap = `${gap}px`;
-}
-
-// Завантажити початкові картинки
-fetchImages(currentPage);
-
-// Завантажити ще картинки
-document.getElementById('loadMore').addEventListener('click', async () => {
+// Кнопка "Завантажити ще 4"
+loadMoreBtn.addEventListener("click", async () => {
     currentPage++;
-    await fetchImages(currentPage);
+    const newImages = await fetchImages(currentPage);
+    allImages = [...allImages, ...newImages];
+    renderGallery(allImages);
 });
 
-// Очистити галерею
-document.getElementById('clearGallery').addEventListener('click', () => {
-    gallery.innerHTML = '';
-    currentPage = 1; // Скидаємо номер сторінки
+// Кнопка "Очистити галерею"
+clearGalleryBtn.addEventListener("click", () => {
+    allImages = [];
+    gallery.innerHTML = "";
+    statusText.textContent = "Галерею очищено.";
 });
 
-// Видалити останню картинку
-document.getElementById('removeLast').addEventListener('click', () => {
-    const images = gallery.getElementsByTagName('img');
-    if (images.length > 0) {
-        gallery.removeChild(images[images.length - 1]);
-        updateImageSizes(); // Оновлюємо розміри
+// Кнопка "Видалити останню"
+removeLastBtn.addEventListener("click", () => {
+    if (allImages.length === 0) {
+        statusText.textContent = "Немає що видаляти!";
+        return;
     }
+    allImages.pop();
+    renderGallery(allImages);
 });
 
-// Перевернути галерею
-document.getElementById('reverseGallery').addEventListener('click', () => {
-    const images = Array.from(gallery.getElementsByTagName('img'));
-    gallery.innerHTML = '';
-    images.reverse().forEach(img => gallery.appendChild(img));
-    updateImageSizes(); // Оновлюємо розміри
-});
-
-// Перемішати галерею
-document.getElementById('shuffleGallery').addEventListener('click', () => {
-    const images = Array.from(gallery.getElementsByTagName('img'));
-    gallery.innerHTML = '';
-    for (let i = images.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [images[i], images[j]] = [images[j], images[i]];
+// Кнопка "Перевернути галерею"
+reverseGalleryBtn.addEventListener("click", () => {
+    if (allImages.length === 0) {
+        statusText.textContent = "Галерея порожня.";
+        return;
     }
-    images.forEach(img => gallery.appendChild(img));
-    updateImageSizes(); // Оновлюємо розміри
-});
-
-// Оновлюємо розміри зображень при зміні розміру вікна
-window.addEventListener('resize', () => {
-    updateImageSizes();
+    allImages.reverse();
+    renderGallery(allImages);
 });
