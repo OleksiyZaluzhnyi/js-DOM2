@@ -25,7 +25,7 @@ async function fetchImages(page = 1, limit = 4) {
 }
 
 function renderGallery(images) {
-    gallery.innerHTML = ""; // очищаємо перед оновленням
+    gallery.innerHTML = "";
     images.forEach(img => {
         const image = document.createElement("img");
         image.src = img.download_url;
